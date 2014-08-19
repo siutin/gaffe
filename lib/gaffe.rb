@@ -42,7 +42,7 @@ module Gaffe
       if controller.has_key?(:subdomain)
           controller = controller[:subdomain].find { |pattern, _| (env['SERVER_NAME'] =~ pattern) == 0}.try(:last)
       elsif controller.has_key?(:namespace)
-          controller = controller[:namespace].find { |pattern, _| (env['REQUEST_URI'] =~ pattern or env['REQUEST_PATH' =~ pattern]) == 0 }.try(:last)
+          controller = controller[:namespace].find { |pattern, _| (env['REQUEST_URI'] =~ pattern or env['REQUEST_PATH'] =~ pattern) == 0 }.try(:last)
       else
           controller = controller.find { |pattern, _| env['REQUEST_URI'] =~ pattern }.try(:last)
       end
