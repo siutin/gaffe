@@ -3,11 +3,10 @@
     <img src="http://i.imgur.com/k9Vo08q.png" alt="gaffe" />
   </a>
   <br />
-  Gaffe makes having customized error pages in Rails applications an easy thing.<br /> It takes advantage of a feature present in Rails 3.2 (and 4.0, obviously) called <code>exceptions_app</code>.
+  Gaffe makes having customized error pages in Rails applications an easy thing.<br /> It takes advantage of a feature present in Rails 3.2 (and 4.0+, obviously) called <code>exceptions_app</code>.
   <br /><br />
   <a href="https://rubygems.org/gems/gaffe"><img src="http://img.shields.io/gem/v/gaffe.svg" /></a>
   <a href="https://codeclimate.com/github/mirego/gaffe"><img src="http://img.shields.io/codeclimate/github/mirego/gaffe.svg" /></a>
-  <a href='https://coveralls.io/r/mirego/gaffe?branch=master'><img src="http://img.shields.io/coveralls/mirego/gaffe.svg" /></a>
   <a href='https://gemnasium.com/mirego/gaffe'><img src="http://img.shields.io/gemnasium/mirego/gaffe.svg" /></a>
   <a href="https://travis-ci.org/mirego/gaffe"><img src="http://img.shields.io/travis/mirego/gaffe.svg" /></a>
 </p>
@@ -42,22 +41,23 @@ However, if you want to use your own controller:
 ```ruby
 # config/initializers/gaffe.rb
 Gaffe.configure do |config|
-  config.errors_controller = ErrorsController
+  config.errors_controller = 'ErrorsController'
 end
 
 Gaffe.enable!
 ```
 
-It’s also possible to use a custom controller based on the URL in which the error has occured. This is especially
-useful if you have an application that also serves API requests via JSON. You would probably want to serve API errors
-through JSON and regular errors through HTML pages.
+It’s also possible to use a custom controller based on the URL in which the error has occured. Both absolute and 
+relative URL supported. This is especially useful if you have an application that also serves API requests via 
+JSON. You would probably want to serve API errors through JSON and regular errors through HTML pages.
 
 ```ruby
 # config/initializers/gaffe.rb
 Gaffe.configure do |config|
   config.errors_controller = {
-    %r[^/api/] => Api::ErrorsController,
-    %r[^/] => ErrorsController
+    %r[^/api/] => 'Api::ErrorsController',
+    %r[^/] => 'ErrorsController',
+    %r[^www.example.com] => 'HostSpecificErrorsController'
   }
 end
 
@@ -77,7 +77,7 @@ class ErrorsController < ApplicationController
   include Gaffe::Errors
 
   # Make sure anonymous users can see the page
-  skip_before_filter :authenticate_user!
+  skip_before_action :authenticate_user!
 
   # Override 'error' layout
   layout 'application'
@@ -98,7 +98,7 @@ class API::ErrorsController < API::ApplicationController
   include Gaffe::Errors
 
   # Make sure anonymous users can see the page
-  skip_before_filter :authenticate_user!
+  skip_before_action :authenticate_user!
 
   # Disable layout (your `API::ApplicationController` probably does this already)
   layout false
@@ -156,7 +156,7 @@ config.consider_all_requests_local = false
 ### Rails test environment
 
 You also have to configure Rails’ `test` environment so it lets Gaffe handle exceptions
-in request tests/specs. You’ll have to edit the `config/environments/test.rb` file.
+in request tests. You’ll have to edit the `config/environments/test.rb` file.
 
 ```ruby
 # Make Rails use `exceptions_app` in tests
@@ -166,6 +166,12 @@ config.consider_all_requests_local = false
 config.action_dispatch.show_exceptions = true
 ```
 
+Unfortunately, controller tests (called *functional tests* in Rails) do not
+work with Gaffe, since they only test method calls in the controller class —
+they do not go through the entire Rack stack to simulate a real HTTP request.
+
+To test responses sent by Gaffe, you must use *request tests*.
+
 ## Contributors
 
 * [@remiprev](https://github.com/remiprev)
@@ -174,7 +180,7 @@ config.action_dispatch.show_exceptions = true
 
 ## License
 
-`Gaffe` is © 2013-2014 [Mirego](http://www.mirego.com) and may be freely distributed under the [New BSD license](http://opensource.org/licenses/BSD-3-Clause).  See the [`LICENSE.md`](https://github.com/mirego/gaffe/blob/master/LICENSE.md) file.
+`Gaffe` is © 2013-2016 [Mirego](http://www.mirego.com) and may be freely distributed under the [New BSD license](http://opensource.org/licenses/BSD-3-Clause).  See the [`LICENSE.md`](https://github.com/mirego/gaffe/blob/master/LICENSE.md) file.
 
 The mushroom cloud logo is based on [this lovely icon](http://thenounproject.com/noun/mushroom-cloud/#icon-No18596) by [Gokce Ozan](http://thenounproject.com/occultsearcher), from The Noun Project. Used under a [Creative Commons BY 3.0](http://creativecommons.org/licenses/by/3.0/) license.
 
