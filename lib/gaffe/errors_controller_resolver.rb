@@ -29,13 +29,14 @@ module Gaffe
 
   private
 
-    def request_controller(controllers)
-      matched_controllers = controllers.find do |pattern, _|
-        relative_url = @env['REQUEST_URI']
-        absolute_url = @env['HTTP_HOST'] + relative_url
-        [relative_url, absolute_url].any? { |url| (url =~ pattern).present? }
+    def request_controller(controller)
+
+      matched_controllers = controller.find do |pattern, _|
+        (env['SERVER_NAME'] =~ pattern) == 0 || (env['REQUEST_URI'] =~ pattern) == 0 || (env['REQUEST_PATH'] =~ pattern) == 0 || (env['HTTP_HOST'] =~ pattern) == 0
       end
       matched_controllers.try(:last)
     end
+
+    attr_reader :env
   end
 end
